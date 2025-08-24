@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Jigsaw Employee Enhancer",
+  "version": "1.0",
+  "description": "Enhances Jigsaw employee pages with gender pronouns and symbols",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://jigsaw.thoughtworks.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://jigsaw.thoughtworks.net/accounts/*/details*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
