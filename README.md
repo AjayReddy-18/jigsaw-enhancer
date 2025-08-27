@@ -1,6 +1,6 @@
 # Jigsaw Employee Enhancer
 
-A Chrome browser extension that enhances the Jigsaw internal company website by automatically displaying gender pronouns and symbols next to employee names.
+A Chrome browser extension that enhances the Jigsaw internal company website by automatically displaying gender pronouns and symbols next to employee names, with the ability to filter employees by gender.
 
 ## Features
 
@@ -9,6 +9,12 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
   - 🏳️‍🌈 for non-binary/they pronouns
   - 🔵 for male
   - 🔴 for female
+- **Gender Filtering**: Filter employees by gender using a dropdown with options:
+  - All (default)
+  - Male
+  - Female
+  - Non-binary
+  - Unspecified
 - **Smart Caching**: Caches employee data to avoid repeated API calls
 - **Dynamic Content Support**: Automatically detects new employee elements added to the page
 - **Beautiful UI**: Large, prominent symbols with hover effects and color coding
@@ -22,6 +28,7 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
    - If `pronouns.english.they` is `true` → 🏳️‍🌈
    - If `preferredGender` is `male` → 🔵
    - If `preferredGender` is `female` → 🔴
+5. **Gender Filtering**: Adds a filter dropdown to the existing filter container that allows hiding/showing employees based on gender selection
 
 ## Installation
 
@@ -45,6 +52,12 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
 2. **Navigate to a Jigsaw account page** (e.g., `https://jigsaw.thoughtworks.net/accounts/38402/details`)
 3. **Wait for the page to load** - the extension will automatically process employee names
 4. **View the results** - gender symbols will appear next to employee names
+5. **Use the gender filter** - locate the "Gender Filter" dropdown in the filter section and select your desired gender filter:
+   - **All**: Shows all employees (default)
+   - **Male**: Shows only employees identified as male (🔵)
+   - **Female**: Shows only employees identified as female (🔴)
+   - **Non-binary**: Shows only employees using they/them pronouns (🏳️‍🌈)
+   - **Unspecified**: Shows only employees without gender information
 
 ## File Structure
 
@@ -65,6 +78,8 @@ jigsaw-enhancer/
 - **Content Script**: Automatically runs on matching pages
 - **API Integration**: Fetches employee data from Jigsaw's internal API
 - **Caching**: In-memory cache to optimize performance
+- **DOM Manipulation**: Adds gender filter dropdown to existing filter container
+- **Filtering Logic**: Hides/shows timeline rows based on gender selection using CSS classes
 
 ## Browser Compatibility
 
@@ -80,6 +95,12 @@ jigsaw-enhancer/
 2. **Verify URL pattern**: Ensure you're on a page matching `/accounts/{id}/details`
 3. **Check permissions**: Verify the extension has access to jigsaw.thoughtworks.net
 4. **Reload the page**: Sometimes a page refresh is needed after installation
+
+### Gender Filter Not Appearing
+
+1. **Check if filter container exists**: The gender filter is added to the existing filter section
+2. **Verify page structure**: Ensure the page has the expected filter container with class `filterContainer__6d09b`
+3. **Check console for errors**: Look for "Gender filter added" message in the console
 
 ### API Errors
 

@@ -5,6 +5,8 @@ class JigsawEnhancer {
   constructor() {
     this.baseUrl = 'https://jigsaw.thoughtworks.net';
     this.employeeCache = new Map(); // Cache employee data to avoid repeated API calls
+    this.currentGenderFilter = 'all'; // Track current gender filter
+    this.employeeDataMap = new Map(); // Map of employee elements to their data
     this.init();
   }
 
@@ -39,6 +41,43 @@ class JigsawEnhancer {
         display: inline-block;
         max-width: none;
       }
+      
+      /* Gender filter dropdown styles */
+      .gender-filter-container {
+        display: inline-block;
+        margin-right: 15px;
+        vertical-align: middle;
+      }
+      
+      .gender-filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        font-size: 14px;
+        color: #333;
+        cursor: pointer;
+        min-width: 120px;
+      }
+      
+      .gender-filter-select:focus {
+        outline: none;
+        border-color: #972e8e;
+        box-shadow: 0 0 0 2px rgba(151, 46, 142, 0.2);
+      }
+      
+      .gender-filter-label {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+        font-weight: 500;
+      }
+      
+      /* Hidden employee rows */
+      .timeline-row.hidden-by-gender-filter {
+        display: none;
+      }
     `;
     
     document.head.appendChild(style);
@@ -47,6 +86,9 @@ class JigsawEnhancer {
 
   processPage() {
     console.log('Jigsaw Enhancer: Processing page...');
+    
+    // Add gender filter dropdown
+    this.addGenderFilter();
     
     // Find all employee name elements
     const employeeElements = document.querySelectorAll('.timeline-consultant-name');
@@ -64,6 +106,119 @@ class JigsawEnhancer {
     });
   }
 
+  addGenderFilter() {
+    // Check if gender filter already exists
+    if (document.getElementById('gender-filter')) {
+      return;
+    }
+
+    // Find the filter container
+    const filterContainer = document.querySelector('.filterContainer__6d09b');
+    if (!filterContainer) {
+      console.log('Jigsaw Enhancer: Filter container not found');
+      return;
+    }
+
+    // Create gender filter dropdown
+    const genderFilterDiv = document.createElement('div');
+    genderFilterDiv.className = 'gender-filter-container';
+    genderFilterDiv.innerHTML = `
+      <label class="gender-filter-label">Gender Filter</label>
+      <select class="gender-filter-select" id="gender-filter">
+        <option value="all">All</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="non-binary">Non-binary</option>
+        <option value="unspecified">Unspecified</option>
+      </select>
+    `;
+
+    // Insert the gender filter before the View button
+    const viewButton = filterContainer.querySelector('.viewButton__7205e');
+    if (viewButton) {
+      viewButton.parentNode.insertBefore(genderFilterDiv, viewButton);
+    } else {
+      // Fallback: add to the end of the filter container
+      filterContainer.appendChild(genderFilterDiv);
+    }
+
+    // Add event listener for filter changes
+    const genderSelect = document.getElementById('gender-filter');
+    genderSelect.addEventListener('change', (e) => {
+      this.currentGenderFilter = e.target.value;
+      this.applyGenderFilter();
+    });
+
+    console.log('Jigsaw Enhancer: Gender filter added');
+  }
+
+  applyGenderFilter() {
+    console.log(`Jigsaw Enhancer: Applying gender filter: ${this.currentGenderFilter}`);
+    
+    // Get all timeline rows
+    const timelineRows = document.querySelectorAll('.timeline-row');
+    
+    timelineRows.forEach(row => {
+      const employeeElement = row.querySelector('.timeline-consultant-name');
+      if (!employeeElement) return;
+
+      const employeeId = this.getEmployeeIdFromElement(employeeElement);
+      if (!employeeId) return;
+
+      const employeeData = this.employeeDataMap.get(employeeId);
+      if (!employeeData) return;
+
+      const shouldShow = this.shouldShowEmployee(employeeData);
+      
+      if (shouldShow) {
+        row.classList.remove('hidden-by-gender-filter');
+      } else {
+        row.classList.add('hidden-by-gender-filter');
+      }
+    });
+
+    console.log(`Jigsaw Enhancer: Gender filter applied - ${this.currentGenderFilter}`);
+  }
+
+  shouldShowEmployee(employeeData) {
+    if (this.currentGenderFilter === 'all') {
+      return true;
+    }
+
+    try {
+      // Check if "they" is true in pronouns > english (non-binary)
+      if (employeeData.pronouns && 
+          employeeData.pronouns.english && 
+          employeeData.pronouns.english.they === true) {
+        return this.currentGenderFilter === 'non-binary';
+      }
+
+      // Use preferredGender if available
+      const preferredGender = employeeData.preferredGender?.toLowerCase();
+      if (preferredGender) {
+        if (new Set(['man', 'male']).has(preferredGender)) {
+          return this.currentGenderFilter === 'male';
+        } else if (new Set(['woman', 'female']).has(preferredGender)) {
+          return this.currentGenderFilter === 'female';
+        }
+      }
+
+      // If no gender information, show for unspecified
+      return this.currentGenderFilter === 'unspecified';
+    } catch (error) {
+      console.error('Jigsaw Enhancer: Error checking employee gender filter:', error);
+      return this.currentGenderFilter === 'unspecified';
+    }
+  }
+
+  getEmployeeIdFromElement(element) {
+    const href = element.getAttribute('href');
+    if (!href) return null;
+
+    const employeeIdMatch = href.match(/\/consultants\/(\d+)/);
+    return employeeIdMatch ? employeeIdMatch[1] : null;
+  }
+
   processEmployeeElement(element) {
     // Check if we've already processed this element
     if (element.dataset.enhanced === 'true') {
@@ -71,13 +226,9 @@ class JigsawEnhancer {
     }
 
     // Extract employee ID from href
-    const href = element.getAttribute('href');
-    if (!href) return;
+    const employeeId = this.getEmployeeIdFromElement(element);
+    if (!employeeId) return;
 
-    const employeeIdMatch = href.match(/\/consultants\/(\d+)/);
-    if (!employeeIdMatch) return;
-
-    const employeeId = employeeIdMatch[1];
     console.log(`Jigsaw Enhancer: Processing employee ID: ${employeeId}`);
 
     // Mark as processed to avoid duplicate processing
@@ -86,7 +237,15 @@ class JigsawEnhancer {
     // Get employee data and add symbol
     this.getEmployeeData(employeeId).then(employeeData => {
       if (employeeData) {
+        // Store employee data for filtering
+        this.employeeDataMap.set(employeeId, employeeData);
+        
         this.addGenderSymbol(element, employeeData);
+        
+        // Apply current filter after adding symbol
+        if (this.currentGenderFilter !== 'all') {
+          this.applyGenderFilter();
+        }
       }
     }).catch(error => {
       console.error(`Jigsaw Enhancer: Error processing employee ${employeeId}:`, error);
