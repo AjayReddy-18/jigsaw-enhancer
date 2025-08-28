@@ -44,7 +44,8 @@ class JigsawEnhancer {
       
       /* Gender filter dropdown styles */
       .gender-filter-container {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         margin-right: 15px;
         vertical-align: middle;
       }
@@ -58,6 +59,8 @@ class JigsawEnhancer {
         color: #333;
         cursor: pointer;
         min-width: 120px;
+        height: 36px;
+        box-sizing: border-box;
       }
       
       .gender-filter-select:focus {
@@ -67,11 +70,12 @@ class JigsawEnhancer {
       }
       
       .gender-filter-label {
-        display: block;
+        display: inline-block;
         font-size: 12px;
         color: #666;
-        margin-bottom: 4px;
+        margin-right: 8px;
         font-weight: 500;
+        white-space: nowrap;
       }
       
       /* Hidden employee rows */
@@ -123,7 +127,7 @@ class JigsawEnhancer {
     const genderFilterDiv = document.createElement('div');
     genderFilterDiv.className = 'gender-filter-container';
     genderFilterDiv.innerHTML = `
-      <label class="gender-filter-label">Gender Filter</label>
+      <span class="gender-filter-label">Gender Filter:</span>
       <select class="gender-filter-select" id="gender-filter">
         <option value="all">All</option>
         <option value="male">Male</option>
