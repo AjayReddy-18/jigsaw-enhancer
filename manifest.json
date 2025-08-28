@@ -11,7 +11,10 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://jigsaw.thoughtworks.net/accounts/*/details*"],
+      "matches": [
+        "https://jigsaw.thoughtworks.net/accounts/*/details*",
+        "https://jigsaw.thoughtworks.net/consultants/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }

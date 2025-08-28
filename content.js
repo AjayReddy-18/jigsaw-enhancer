@@ -1,5 +1,10 @@
 // Jigsaw Employee Enhancer
 // This script enhances employee pages with gender pronouns and symbols
+// 
+// Features:
+// - Gender symbols and filtering on account pages
+// - LinkedIn integration on consultant profile pages (with duplicate prevention)
+// - Smart caching and DOM change detection
 
 class JigsawEnhancer {
   constructor() {
@@ -7,6 +12,7 @@ class JigsawEnhancer {
     this.employeeCache = new Map(); // Cache employee data to avoid repeated API calls
     this.currentGenderFilter = 'all'; // Track current gender filter
     this.employeeDataMap = new Map(); // Map of employee elements to their data
+    this.processedEmployeeProfiles = new Set(); // Track which employee profiles have been processed
     this.init();
   }
 
@@ -16,13 +22,20 @@ class JigsawEnhancer {
     
     // Wait for the page to fully load
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.processPage());
+      document.addEventListener('DOMContentLoaded', () => {
+        this.processPage();
+        this.processEmployeeProfilePage();
+      });
     } else {
       this.processPage();
+      this.processEmployeeProfilePage();
     }
 
     // Also listen for dynamic content changes (in case the page loads content dynamically)
     this.observePageChanges();
+    
+    // Listen for URL changes (for single-page app navigation)
+    this.observeUrlChanges();
   }
 
   injectStyles() {
@@ -40,6 +53,22 @@ class JigsawEnhancer {
         overflow: visible;
         display: inline-block;
         max-width: none;
+      }
+      
+      /* LinkedIn enhancement styles */
+      .gradeName__27b12 {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      
+      .gradeName__27b12 a {
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+      }
+      
+      .gradeName__27b12 a:hover {
+        opacity: 0.8;
       }
       
       /* Gender filter dropdown styles */
@@ -91,6 +120,9 @@ class JigsawEnhancer {
   processPage() {
     console.log('Jigsaw Enhancer: Processing page...');
     
+    // Clear processed profiles when processing a new page
+    this.processedEmployeeProfiles.clear();
+    
     // Add gender filter dropdown
     this.addGenderFilter();
     
@@ -108,6 +140,100 @@ class JigsawEnhancer {
     employeeElements.forEach(element => {
       this.processEmployeeElement(element);
     });
+  }
+
+  processEmployeeProfilePage() {
+    // Check if we're on an employee profile page
+    const pathMatch = window.location.pathname.match(/\/consultants\/(\d+)/);
+    if (!pathMatch) {
+      console.log('Jigsaw Enhancer: Not on an employee profile page');
+      return;
+    }
+
+    const employeeId = pathMatch[1];
+    console.log(`Jigsaw Enhancer: Processing employee profile page for ID: ${employeeId}`);
+
+    // Check if we've already processed this profile
+    if (this.processedEmployeeProfiles.has(employeeId)) {
+      console.log(`Jigsaw Enhancer: Profile for employee ${employeeId} already processed, skipping.`);
+      return;
+    }
+
+    // Find the grade element
+    const gradeElement = document.querySelector('.gradeName__27b12');
+    if (!gradeElement) {
+      console.log('Jigsaw Enhancer: Grade element not found, waiting for DOM to load...');
+      // Try again after a short delay in case the element loads dynamically
+      setTimeout(() => this.processEmployeeProfilePage(), 500);
+      return;
+    }
+
+    // Check if we've already enhanced this element
+    if (gradeElement.dataset.linkedinEnhanced === 'true') {
+      console.log('Jigsaw Enhancer: Grade element already enhanced');
+      // Mark as processed even if already enhanced
+      this.processedEmployeeProfiles.add(employeeId);
+      return;
+    }
+
+    // Mark as processed to prevent duplicate processing
+    this.processedEmployeeProfiles.add(employeeId);
+    console.log(`Jigsaw Enhancer: Marked employee ${employeeId} as processed`);
+
+    // Get employee data to extract the name
+    this.getEmployeeData(employeeId).then(employeeData => {
+      if (employeeData && employeeData.name) {
+        this.enhanceGradeElementWithLinkedIn(gradeElement, employeeData.name);
+        gradeElement.dataset.linkedinEnhanced = 'true';
+        console.log(`Jigsaw Enhancer: Enhanced grade element with LinkedIn link for ${employeeData.name}`);
+      } else {
+        console.log('Jigsaw Enhancer: Employee data or name not found');
+      }
+    }).catch(error => {
+      console.error(`Jigsaw Enhancer: Error enhancing grade element for employee ${employeeId}:`, error);
+    });
+  }
+
+  enhanceGradeElementWithLinkedIn(gradeElement, employeeName) {
+    // Check if LinkedIn link already exists
+    if (gradeElement.querySelector('a[href*="linkedin.com"]')) {
+      console.log('Jigsaw Enhancer: LinkedIn link already exists, skipping enhancement');
+      return;
+    }
+
+    // Create LinkedIn search URL with employee name
+    const linkedinSearchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(employeeName + ' Thoughtworks')}`;
+    
+    // Create the LinkedIn link with icon
+    const linkedinLink = document.createElement('a');
+    linkedinLink.href = linkedinSearchUrl;
+    linkedinLink.target = '_blank';
+    linkedinLink.rel = 'noopener noreferrer';
+    linkedinLink.title = `Search for ${employeeName} on LinkedIn`;
+    
+    // Create the LinkedIn icon
+    const linkedinIcon = document.createElement('img');
+    linkedinIcon.src = 'https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png';
+    linkedinIcon.alt = 'LinkedIn';
+    linkedinIcon.style.cssText = 'width:16px; height:16px; vertical-align:middle;';
+    
+    // Append icon to link
+    linkedinLink.appendChild(linkedinIcon);
+    
+    // Append link to grade element
+    gradeElement.appendChild(linkedinLink);
+    
+    console.log(`Jigsaw Enhancer: Successfully added LinkedIn link for ${employeeName}`);
+  }
+
+  // Debug method to help troubleshoot issues
+  debugLinkedInEnhancement() {
+    console.log('Jigsaw Enhancer: Debug Information');
+    console.log('Current URL:', window.location.pathname);
+    console.log('Processed profiles:', Array.from(this.processedEmployeeProfiles));
+    console.log('Grade elements found:', document.querySelectorAll('.gradeName__27b12').length);
+    console.log('Enhanced grade elements:', document.querySelectorAll('.gradeName__27b12[data-linkedin-enhanced="true"]').length);
+    console.log('LinkedIn links found:', document.querySelectorAll('a[href*="linkedin.com"]').length);
   }
 
   addGenderFilter() {
@@ -339,6 +465,7 @@ class JigsawEnhancer {
     // Use MutationObserver to watch for dynamic content changes
     const observer = new MutationObserver((mutations) => {
       let shouldReprocess = false;
+      let shouldReprocessProfile = false;
       
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
@@ -350,6 +477,16 @@ class JigsawEnhancer {
               } else if (node.querySelector && node.querySelector('.timeline-consultant-name')) {
                 shouldReprocess = true;
               }
+              
+              // Check if grade element was added (for profile pages)
+              // Only process if we're actually on a consultant profile page
+              if (window.location.pathname.match(/\/consultants\/(\d+)/)) {
+                if (node.classList && node.classList.contains('gradeName__27b12')) {
+                  shouldReprocessProfile = true;
+                } else if (node.querySelector && node.querySelector('.gradeName__27b12')) {
+                  shouldReprocessProfile = true;
+                }
+              }
             }
           });
         }
@@ -359,6 +496,11 @@ class JigsawEnhancer {
         // Small delay to ensure DOM is stable
         setTimeout(() => this.processPage(), 100);
       }
+      
+      if (shouldReprocessProfile) {
+        // Small delay to ensure DOM is stable
+        setTimeout(() => this.processEmployeeProfilePage(), 100);
+      }
     });
 
     // Start observing
@@ -367,7 +509,40 @@ class JigsawEnhancer {
       subtree: true
     });
   }
+
+  observeUrlChanges() {
+    let currentEmployeeId = null;
+
+    const updateEmployeeId = () => {
+      const pathMatch = window.location.pathname.match(/\/consultants\/(\d+)/);
+      if (pathMatch) {
+        const newEmployeeId = pathMatch[1];
+        if (newEmployeeId !== currentEmployeeId) {
+          currentEmployeeId = newEmployeeId;
+          // Clear processed profiles when navigating to a new employee
+          this.processedEmployeeProfiles.clear();
+          // Small delay to ensure DOM is updated
+          setTimeout(() => this.processEmployeeProfilePage(), 100);
+        }
+      } else {
+        // Not on a consultant profile page, clear tracking
+        currentEmployeeId = null;
+        this.processedEmployeeProfiles.clear();
+      }
+    };
+
+    updateEmployeeId(); // Initial call
+
+    // Listen for popstate events (for back/forward navigation)
+    window.addEventListener('popstate', updateEmployeeId);
+
+    // Listen for hash changes (for single-page app navigation)
+    window.addEventListener('hashchange', updateEmployeeId);
+  }
 }
 
 // Initialize the enhancer when the script loads
-new JigsawEnhancer();
+const jigsawEnhancer = new JigsawEnhancer();
+
+// Make debug method available globally for troubleshooting
+window.debugJigsawLinkedIn = () => jigsawEnhancer.debugLinkedInEnhancement();
