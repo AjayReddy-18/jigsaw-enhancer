@@ -10,6 +10,8 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
   - 🔵 for male
   - 🔴 for female
 - **LinkedIn Integration**: Adds LinkedIn search links next to employee grades on consultant profile pages
+  - **Smart Class Detection**: Automatically detects grade elements with different class name patterns (e.g., `gradeName__27b12`, `gradeName__1c88c`)
+  - **Priority-based Detection**: Looks for `gradeName__27b12` first, then falls back to `gradeName__1c88c`
 - **Gender Filtering**: Filter employees by gender using a dropdown with options:
   - All (default)
   - Male
@@ -92,8 +94,12 @@ jigsaw-enhancer/
 - **DOM Manipulation**: 
   - Adds gender filter dropdown to existing filter container on account pages
   - Enhances grade elements with LinkedIn search links on consultant profile pages
+  - **Smart Element Detection**: Uses priority-based detection for grade elements:
+    - First priority: `gradeName__27b12`
+    - Second priority: `gradeName__1c88c`
 - **Filtering Logic**: Hides/shows timeline rows based on gender selection using CSS classes
 - **URL Change Detection**: Monitors for navigation between different consultant profile pages
+- **Duplicate Prevention**: Multiple layers of protection against duplicate LinkedIn links
 
 ## Browser Compatibility
 
@@ -125,10 +131,14 @@ jigsaw-enhancer/
 ### LinkedIn Integration Not Working
 
 1. **Check if you're on a consultant profile page**: Ensure the URL matches `/consultants/{id}` pattern
-2. **Verify the grade element exists**: Look for an element with class `gradeName__27b12`
+2. **Verify the grade element exists**: Look for an element with class `gradeName__27b12` or similar patterns
 3. **Check console for errors**: Look for "Enhanced grade element with LinkedIn link" message
 4. **Employee data not found**: The extension needs to successfully fetch employee data from the API
 5. **Page navigation**: If using browser back/forward, the extension should automatically detect the change
+6. **Class name variations**: The extension automatically detects different class name patterns:
+   - First priority: `gradeName__27b12`
+   - Second priority: `gradeName__1c88c`
+7. **Debug class detection**: Use `debugJigsawLinkedIn()` in console to see detected grade elements
 
 ## Development
 

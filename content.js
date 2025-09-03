@@ -5,6 +5,7 @@
 // - Gender symbols and filtering on account pages
 // - LinkedIn integration on consultant profile pages (with duplicate prevention)
 // - Smart caching and DOM change detection
+// - Priority-based grade element detection: gradeName__27b12 first, then gradeName__1c88c
 
 class JigsawEnhancer {
   constructor() {
@@ -56,18 +57,21 @@ class JigsawEnhancer {
       }
       
       /* LinkedIn enhancement styles */
-      .gradeName__27b12 {
+      .gradeName__27b12,
+      .gradeName__1c88c {
         display: flex;
         align-items: center;
         gap: 5px;
       }
       
-      .gradeName__27b12 a {
+      .gradeName__27b12 a,
+      .gradeName__1c88c a {
         text-decoration: none;
         transition: opacity 0.2s ease;
       }
       
-      .gradeName__27b12 a:hover {
+      .gradeName__27b12 a:hover,
+      .gradeName__1c88c a:hover {
         opacity: 0.8;
       }
       
@@ -159,8 +163,8 @@ class JigsawEnhancer {
       return;
     }
 
-    // Find the grade element
-    const gradeElement = document.querySelector('.gradeName__27b12');
+    // Find the grade element with different possible class name patterns
+    const gradeElement = this.findGradeElement();
     if (!gradeElement) {
       console.log('Jigsaw Enhancer: Grade element not found, waiting for DOM to load...');
       // Try again after a short delay in case the element loads dynamically
@@ -192,6 +196,25 @@ class JigsawEnhancer {
     }).catch(error => {
       console.error(`Jigsaw Enhancer: Error enhancing grade element for employee ${employeeId}:`, error);
     });
+  }
+
+  findGradeElement() {
+    // Try the two specific class name patterns in order
+    const possibleClassNames = [
+      '.gradeName__27b12',  // First priority
+      '.gradeName__1c88c'   // Second priority
+    ];
+
+    for (const selector of possibleClassNames) {
+      const element = document.querySelector(selector);
+      if (element) {
+        console.log(`Jigsaw Enhancer: Found grade element with selector: ${selector}`);
+        return element;
+      }
+    }
+
+    console.log('Jigsaw Enhancer: No grade element found with known class name patterns');
+    return null;
   }
 
   enhanceGradeElementWithLinkedIn(gradeElement, employeeName) {
@@ -231,9 +254,33 @@ class JigsawEnhancer {
     console.log('Jigsaw Enhancer: Debug Information');
     console.log('Current URL:', window.location.pathname);
     console.log('Processed profiles:', Array.from(this.processedEmployeeProfiles));
-    console.log('Grade elements found:', document.querySelectorAll('.gradeName__27b12').length);
-    console.log('Enhanced grade elements:', document.querySelectorAll('.gradeName__27b12[data-linkedin-enhanced="true"]').length);
+    
+    // Check for the two specific grade element patterns
+    const gradeElements27b12 = document.querySelectorAll('.gradeName__27b12');
+    const gradeElements1c88c = document.querySelectorAll('.gradeName__1c88c');
+    
+    console.log('Grade elements found:');
+    console.log('  - .gradeName__27b12:', gradeElements27b12.length);
+    console.log('  - .gradeName__1c88c:', gradeElements1c88c.length);
+    
+    // Check enhanced elements
+    const enhancedElements27b12 = document.querySelectorAll('.gradeName__27b12[data-linkedin-enhanced="true"]');
+    const enhancedElements1c88c = document.querySelectorAll('.gradeName__1c88c[data-linkedin-enhanced="true"]');
+    
+    console.log('Enhanced grade elements:');
+    console.log('  - .gradeName__27b12:', enhancedElements27b12.length);
+    console.log('  - .gradeName__1c88c:', enhancedElements1c88c.length);
+    
     console.log('LinkedIn links found:', document.querySelectorAll('a[href*="linkedin.com"]').length);
+    
+    // Show actual class names found
+    const allGradeElements = document.querySelectorAll('[class*="gradeName"]');
+    if (allGradeElements.length > 0) {
+      console.log('Actual grade element class names found:');
+      allGradeElements.forEach((el, index) => {
+        console.log(`  ${index + 1}:`, el.className);
+      });
+    }
   }
 
   addGenderFilter() {
@@ -481,9 +528,12 @@ class JigsawEnhancer {
               // Check if grade element was added (for profile pages)
               // Only process if we're actually on a consultant profile page
               if (window.location.pathname.match(/\/consultants\/(\d+)/)) {
-                if (node.classList && node.classList.contains('gradeName__27b12')) {
+                // Check for the two specific grade element class patterns
+                if (node.classList && (node.classList.contains('gradeName__27b12') || 
+                                     node.classList.contains('gradeName__1c88c'))) {
                   shouldReprocessProfile = true;
-                } else if (node.querySelector && node.querySelector('.gradeName__27b12')) {
+                } else if (node.querySelector && (node.querySelector('.gradeName__27b12') || 
+                                                node.querySelector('.gradeName__1c88c'))) {
                   shouldReprocessProfile = true;
                 }
               }
