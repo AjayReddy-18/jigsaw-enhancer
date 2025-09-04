@@ -4,37 +4,28 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
 
 ## Features
 
-- **Automatic Detection**: Works on account detail pages (URL pattern: `/accounts/{id}/details`) and consultant profile pages (URL pattern: `/consultants/{id}`)
-- **Gender Symbols**: Displays appropriate symbols next to employee names:
+### Gender Symbols & Filtering
+- **Automatic Gender Detection**: Automatically detects and displays gender symbols next to employee names
+- **Gender Symbols**:
   - 🏳️‍🌈 for non-binary/they pronouns
   - 🔵 for male
   - 🔴 for female
-- **LinkedIn Integration**: Adds LinkedIn search links next to employee grades on consultant profile pages
-  - **Smart Class Detection**: Automatically detects grade elements with different class name patterns (e.g., `gradeName__27b12`, `gradeName__1c88c`)
-  - **Priority-based Detection**: Looks for `gradeName__27b12` first, then falls back to `gradeName__1c88c`
 - **Gender Filtering**: Filter employees by gender using a dropdown with options:
   - All (default)
   - Male
   - Female
   - Non-binary
   - Unspecified
-- **Smart Caching**: Caches employee data to avoid repeated API calls
+
+### LinkedIn Integration
+- **LinkedIn Search Links**: Adds LinkedIn search links next to employee grades on consultant profile pages
+- **Smart Detection**: Automatically detects and enhances grade elements on profile pages
+- **One-Click Search**: Click the LinkedIn icon to search for the employee on LinkedIn
+
+### Smart Features
+- **Automatic Activation**: Works automatically on Jigsaw account pages and consultant profile pages
 - **Dynamic Content Support**: Automatically detects new employee elements added to the page
-- **Beautiful UI**: Large, prominent symbols with hover effects and color coding
-
-## How It Works
-
-1. **Page Detection**: The extension automatically activates when you visit a Jigsaw account page or consultant profile page
-2. **Employee Extraction**: 
-   - On account pages: Finds all employee name elements with class `timeline-consultant-name`
-   - On consultant profile pages: Finds the grade element with class `gradeName__27b12`
-3. **Data Integration**: Retrieves employee information for each employee from the Jigsaw API
-4. **Symbol Display**: Analyzes employee data and displays appropriate gender symbols:
-   - If `pronouns.english.they` is `true` → 🏳️‍🌈
-   - If `preferredGender` is `male` → 🔵
-   - If `preferredGender` is `female` → 🔴
-5. **LinkedIn Enhancement**: On consultant profile pages, adds a LinkedIn search link next to the employee's grade that searches for the employee on LinkedIn
-6. **Gender Filtering**: Adds a filter dropdown to the existing filter container that allows hiding/showing employees based on gender selection
+- **Performance Optimized**: Includes smart caching to avoid repeated API calls
 
 ## Installation
 
@@ -54,99 +45,59 @@ A Chrome browser extension that enhances the Jigsaw internal company website by 
 
 ## Usage
 
+### Getting Started
+
 1. **Install the extension** using one of the methods above
 2. **Navigate to a Jigsaw page**:
    - **Account page** (e.g., `https://jigsaw.thoughtworks.net/accounts/38402/details`) - for gender symbols and filtering
    - **Consultant profile page** (e.g., `https://jigsaw.thoughtworks.net/consultants/45482`) - for LinkedIn integration
 3. **Wait for the page to load** - the extension will automatically process the page
-4. **View the results**:
-   - **On account pages**: Gender symbols will appear next to employee names
-   - **On consultant profile pages**: LinkedIn search links will appear next to employee grades
-5. **Use the gender filter** (on account pages): Locate the "Gender Filter" dropdown in the filter section and select your desired gender filter:
+
+### Using Gender Symbols
+
+- **On account pages**: Gender symbols will automatically appear next to employee names
+- **Symbol meanings**:
+  - 🏳️‍🌈 = Uses they/them pronouns (non-binary)
+  - 🔵 = Male
+  - 🔴 = Female
+  - No symbol = Gender information not specified
+
+### Using Gender Filtering
+
+1. **Locate the filter section** on the account page
+2. **Find the "Gender Filter" dropdown** - it will be added to the existing filter area
+3. **Select your desired filter**:
    - **All**: Shows all employees (default)
    - **Male**: Shows only employees identified as male (🔵)
    - **Female**: Shows only employees identified as female (🔴)
    - **Non-binary**: Shows only employees using they/them pronouns (🏳️‍🌈)
    - **Unspecified**: Shows only employees without gender information
-6. **LinkedIn Integration**: Click the LinkedIn icon next to an employee's grade to search for them on LinkedIn
+4. **View filtered results** - the page will automatically hide/show employees based on your selection
 
-## File Structure
+### Using LinkedIn Integration
 
-```
-jigsaw-enhancer/
-├── manifest.json      # Extension configuration
-├── content.js         # Main logic script
-├── README.md          # This file
-└── icons/            # Extension icons (optional)
-```
+1. **Navigate to a consultant profile page** (URL pattern: `/consultants/{id}`)
+2. **Look for the LinkedIn icon** next to the employee's grade/title
+3. **Click the LinkedIn icon** to open a LinkedIn search for that employee
+4. **The search will include** the employee's name and "Thoughtworks" to help find the correct profile
 
-## Technical Details
+## Supported Pages
 
-- **Manifest Version**: 3 (latest Chrome extension standard)
-- **Permissions**: 
-  - `activeTab`: Access to the current tab
-  - `host_permissions`: Access to jigsaw.thoughtworks.net
-- **Content Script**: Automatically runs on matching pages:
-  - Account pages: `/accounts/*/details*`
-  - Consultant profile pages: `/consultants/*`
-- **API Integration**: Fetches employee data from Jigsaw's internal API (`/webapi/employees/{id}`)
-- **Caching**: In-memory cache to optimize performance
-- **DOM Manipulation**: 
-  - Adds gender filter dropdown to existing filter container on account pages
-  - Enhances grade elements with LinkedIn search links on consultant profile pages
-  - **Smart Element Detection**: Uses priority-based detection for grade elements:
-    - First priority: `gradeName__27b12`
-    - Second priority: `gradeName__1c88c`
-- **Filtering Logic**: Hides/shows timeline rows based on gender selection using CSS classes
-- **URL Change Detection**: Monitors for navigation between different consultant profile pages
-- **Duplicate Prevention**: Multiple layers of protection against duplicate LinkedIn links
+### Account Pages
+- **URL Pattern**: `/accounts/{id}/details`
+- **Features**: Gender symbols, gender filtering
+- **Example**: `https://jigsaw.thoughtworks.net/accounts/38402/details`
+
+### Consultant Profile Pages
+- **URL Pattern**: `/consultants/{id}`
+- **Features**: LinkedIn integration
+- **Example**: `https://jigsaw.thoughtworks.net/consultants/45482`
 
 ## Browser Compatibility
 
 - **Chrome**: Full support (tested)
 - **Edge**: Should work (Chromium-based)
 - **Firefox**: May require manifest v2 conversion
-
-## Troubleshooting
-
-### Extension Not Working
-
-1. **Check the console**: Open Developer Tools (F12) and look for "Jigsaw Enhancer" messages
-2. **Verify URL pattern**: Ensure you're on a page matching `/accounts/{id}/details`
-3. **Check permissions**: Verify the extension has access to jigsaw.thoughtworks.net
-4. **Reload the page**: Sometimes a page refresh is needed after installation
-
-### Gender Filter Not Appearing
-
-1. **Check if filter container exists**: The gender filter is added to the existing filter section
-2. **Verify page structure**: Ensure the page has the expected filter container with class `filterContainer__6d09b`
-3. **Check console for errors**: Look for "Gender filter added" message in the console
-
-### API Errors
-
-- **Network issues**: Check if you can access the Jigsaw API directly
-- **Authentication**: Ensure you're logged into Jigsaw
-- **Rate limiting**: The extension includes caching to minimize API calls
-
-### LinkedIn Integration Not Working
-
-1. **Check if you're on a consultant profile page**: Ensure the URL matches `/consultants/{id}` pattern
-2. **Verify the grade element exists**: Look for an element with class `gradeName__27b12` or similar patterns
-3. **Check console for errors**: Look for "Enhanced grade element with LinkedIn link" message
-4. **Employee data not found**: The extension needs to successfully fetch employee data from the API
-5. **Page navigation**: If using browser back/forward, the extension should automatically detect the change
-6. **Class name variations**: The extension automatically detects different class name patterns:
-   - First priority: `gradeName__27b12`
-   - Second priority: `gradeName__1c88c`
-7. **Debug class detection**: Use `debugJigsawLinkedIn()` in console to see detected grade elements
-
-## Development
-
-To modify the extension:
-
-1. **Edit the files** in your local copy
-2. **Reload the extension** in `chrome://extensions/`
-3. **Refresh the Jigsaw page** to see changes
 
 ## Security Notes
 
