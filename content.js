@@ -514,4 +514,4 @@ class JigsawEnhancer {
 
 const jigsawEnhancer = new JigsawEnhancer(config);
 
-window.debugJigsawLinkedIn = () => jigsawEnhancer.debugLinkedInEnhancement();
+
