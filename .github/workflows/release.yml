@@ -1,0 +1,26 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*' 
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create ZIP
+        run: |
+          zip -r my-jigsaw-enhancer.zip manifest.json content.js
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: my-jigsaw-enhancer.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
